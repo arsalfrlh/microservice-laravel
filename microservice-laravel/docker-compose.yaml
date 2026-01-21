@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+
+  auth-app:
+    build: ./auth-service #path folder laravel service auth
+    container_name: auth-app
+    volumes:
+      - ./auth-service:/var/www
+    depends_on:
+      - auth-db
+    networks:
+      - backend
+
+  auth-db:
+    # image: mysql:8 bisa juga pakai ini
+    image: mysql:8.0 #jalankan ini docker pull mysql:8.0
+    container_name: auth-db #nama container| nama Host untuk .env laravel
+    environment:
+      MYSQL_DATABASE: auth_db #nama database
+      MYSQL_ROOT_PASSWORD: root #password database
+    ports:
+      - "3307:3306"
+    networks:
+      - backend
+
+  product-app:
+    build: ./product-service
+    container_name: product-app
+    volumes:
+      - ./product-service:/var/www
+    depends_on:
+      - product-db
+    networks:
+      - backend
+
+  product-db:
+    # image: mysql:8
+    image: mysql:8.0
+    container_name: product-db
+    environment:
+      MYSQL_DATABASE: product_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3308:3306"
+    networks:
+      - backend
+
+  nginx: #tambahkan nginx agar server 2 projek laravel bisa di jalankan di web
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "8001:80"
+    volumes:
+      - ./auth-service:/var/www
+      - ./product-service:/var/www
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - auth-app
+      - product-app
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

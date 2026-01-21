@@ -1,0 +1,44 @@
+===> Docker tidak butuh Xampp dan dan mysql, karena Container Docker sudah ada database, dan PHP <===
+docker --version
+docker compose version
+buat secara manual file "Dockerfile" dan isi confignya
+buat secara manual file "docker-compose.yaml" dan isi confignya
+buat 2 projek laravel laravel new nama_project
+ubah configurasi .env dari ke 2 projek tersebut dan sesuaikan dengan "docker-compose.yaml"
+buat file "auth-service/Dockerfile" dan "product-service/Dockerfile"
+
+setelah itu jalankan "docker compose up -d --build"
+jika error jalankan
+"docker compose down -v"
+"docker compose up -d --build" utk run dan rebuild image (gunakan jika ada perubahan) "docker compose up -d" untuk run tampa rebuild
+lalu cek hasilnya "docker ps"
+
+===> agar servernya bisa di jalankan gunakan ini <===
+buka dari masing masing projek "auth-service" dan "product-service"
+masuk ke container docker C:\Docker\microservice-laravel\auth-service | C:\Docker\microservice-laravel\product-service "docker exec -it auth-app bash"
+setelah di container ketik seperti ini "php artisan key:generate"
+lalu migrate tabel "php artisan migrate"
+setelah itu keluar dari container "exit"
+lalu buat folder "nginx" dan buat file "auth.conf" dan "product.conf" didalan folder tersebut
+dan tambahkan configurasi di didalan nginx "docker-compose.yaml"
+setelah itu jalankan
+"docker compose down"
+"docker compose up -d"
+ubah di config di 2 projek .env session dari database ke file
+lalu cek hasilnya "docker ps"
+akses route service auth di "http://auth.localhost:8001"
+akses route service product di "http://product.localhost:8001"
+
+===> cara melihat database container docker <===
+ketik seperti ini "docker exec -it auth-db mysql -u root -p"
+lalu isi password "root"
+setelah itu melihat semua database "SHOW DATABASES;"
+setelah muncul semua databasenya, pilih database contoh "USE auth_db;"
+setelah itu lihat semua tabel "SHOW TABLES;"
+
+===> cara akses container dan bisa menggunakan syntax php <===
+ketik seperti ini "docker exec -it auth-app bash" lalu anda bisa mengakses, membuat controller, model, install dll
+setelah di dalam container bisa "php artisan install:api", "php artisan make:controller namaController"
+ini untuk mengijinkan docker write log laravel di dlm container
+"chmod -R 775 storage bootstrap/cache"
+"chown -R www-data:www-data storage bootstrap/cache"
