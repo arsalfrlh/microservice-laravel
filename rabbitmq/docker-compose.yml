@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  laravel:
+    build:
+      context: ./laravel
+    container_name: laravel_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./laravel:/var/www #folder projek laravel akan terbaca jadi var/www
+      - ./hls:/var/www/public/hls #untuk akses folder hls(tempat lagu yg sudah jadi hls dgn ffmpeg) dan ini akan menggantikan path dari public/hls di folder laravel(seperti storage:link)| agar laravel bisa akses url lagu "http://localhost:8000/hls/song_1/index.m3u8"
+      - ./laravel/storage/app:/var/www/storage/app #folder path storage laravel akan terbaca jadi var/www/storage
+      - ./laravel/php.ini:/usr/local/etc/php/php.ini #untuk maks upload file
+    depends_on:
+      - rabbitmq #tambahkan ini agar bisa connect ke rabbitmq
+    networks:
+      - app-network
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  python-api:
+    build:
+      context: ./python-worker
+    container_name: python_api
+    command: uvicorn api:app --host 0.0.0.0 --port 5000
+    networks:
+      - app-network
+
+  python-worker:
+    build:
+      context: ./python-worker
+    container_name: python_worker
+    volumes:
+      - ./hls:/app/hls_output #funsinya seperti merename path| folder hls itu di tampilan tapi dlm sistem terbaca jadi hls_output (HLS_OUTPUT_DIR="/app/hls_output")
+      - ./laravel/storage/app:/app/storage #tambahkan ini agar python bisa akses storage file song dari laravel
+      - pip-cache:/root/.cache/pip   # 🔥 TAMBAH INI
+      - whisper-cache:/root/.cache/whisper
+    depends_on:
+      - rabbitmq #tambahkan ini agar bisa connect ke rabbitmq
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  pip-cache:
+  whisper-cache:

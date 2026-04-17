@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+numpy
+requests
+pika
+openai-whisper
+ffmpeg-python
+sentence-transformers
+torch
